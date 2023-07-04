@@ -2,13 +2,17 @@
 import { Box, Text, HStack, VStack, Input, Card, Center } from "@chakra-ui/react";
 import { DeleteIcon, AddIcon, EditIcon } from "@chakra-ui/icons";
 import { FooterMenu } from "@/components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CardLista from "@/components/CardLista";
 import { ITarefa } from '@/components/CardLista';
+import { useRouter } from 'next/router';
 
 const { v4: uuidv4 } = require('uuid');
 const cor = "#0B1C5A"
 const corLista = "#CBE1ED"
+
+
+const API_URL = "http://localhost:3003/api";
 
 interface ILista {
     idTopico: string
@@ -18,7 +22,7 @@ interface ILista {
 }
 
 const topicosData = [
-    { 
+    {
         id: "4e7afed7-6d8d-4710-ba40-c878e4172800",
         title: "Tópico 1",
         color: cor
@@ -54,7 +58,10 @@ const listasData = [
 
 
 
+
 export default function Inicio() {
+    //const router = useRouter();
+    //const { idusuario } = router.query;
 
     const [topicos, setTopicos] = useState(topicosData)
     const [tarefas, setTarefas] = useState<ITarefa[]>([])
@@ -62,6 +69,36 @@ export default function Inicio() {
     const [editandoId, setEditandoId] = useState("")
     const [listas, setListas] = useState(listasData)
     const [listaParaComponente, setListaParaComponente] = useState(listasData)
+
+    /*    
+    useEffect(() => {
+        if(idusuario) {
+            buscarTopicos(idusuario);
+        //buscarListas();
+        }
+      }, [idusuario]);
+
+      const buscarTopicos = async (idUsuario: string | string []) => {
+        try {
+          const resposta = await fetch(`${API_URL}/usuarios/${idUsuario}`);
+          const dados = await resposta.json();
+          setTopicos(dados);
+        } catch (erro) {
+          console.error("Erro ao buscar os tópicos:", erro);
+        }
+      };
+    
+      const buscarListas = async () => {
+        try {
+          const resposta = await fetch(`${API_URL}/listas`);
+          const dados = await resposta.json();
+          setListas(dados);
+          setListaParaComponente(dados);
+        } catch (erro) {
+          console.error("Erro ao buscar as listas:", erro);
+        }
+      };
+    */
 
 
     function handleFindListas(id: string) {
@@ -74,9 +111,21 @@ export default function Inicio() {
         const newTopicos = topicos.filter((item) => item.id !== id)
         setTopicos(newTopicos)
     }
-    
 
-    function handleAdd(title: string)  {
+    function handleDeleteLista(id: string) {
+        const newListas = listas.filter((item) => item.idLista !== id);
+        setListas(newListas);
+        setListaParaComponente(newListas);
+    }
+
+    function handleDeleteTarefa(id: string) {
+        const newTarefas = tarefas.filter((item) => item.idTask !== id);
+        setTarefas(newTarefas);
+    }
+
+  
+
+    function handleAdd(title: string) {
         const newIdTopico = uuidv4();
         const newIdLista = uuidv4();
 
@@ -87,11 +136,12 @@ export default function Inicio() {
             idLista: uuidv4(),
             tarefas: [
                 {
-                  idTask: uuidv4(),
-                  title: "Nova Tarefa",
-                  concluido: false,
+                    idTask: uuidv4(),
+                    title: "Nova Tarefa",
+                    concluido: false,
                 },
-              ],
+                // Adicione outras tarefas aqui, se necessário
+            ],
         };
 
         const newTarefas = [
@@ -153,16 +203,19 @@ export default function Inicio() {
         setTopicos(newTopicos);
         setTarefas(newTarefas);
     };
-    const addNewList = () => {
+    function addNewList (idTopico:string) : void {
         const newLista: ILista = {
-            idTopico: '',
+            idTopico:idTopico,
             title: "Nova Lista",
             color: corLista,
             idLista: uuidv4(),
         };
-        
-    }
+        const newListas = [...listas, newLista];
+        setListas(newListas);
+        setListaParaComponente(newListas);
+    };
 
+    
     return (
         <Box p="3" color='white'>
             <HStack >
@@ -240,27 +293,31 @@ export default function Inicio() {
                         <Text color={'#0B1C5A'} fontWeight={"bold"} alignSelf={"center"}>TASK PLANNER</Text>
                     </Box>
                     <HStack w="full" h="full" p="3" alignItems={"flex-start"}>
-                    {listaParaComponente.map((item) => (
-              <VStack key={item.idTopico} w="full" h="full" p="3">
-                <Text fontWeight="bold" color="#444444">
-                  Tópico: {item.idTopico}
-                </Text>
-                <VStack w="full" overflowY="auto" maxH="40rem" overflowX="hidden">
-                  {item.listas.map(() => (
-                    <CardLista
-                      key={lista.idLista}
-                      listas={listaParaComponente}
-                      tarefas={tarefas}
-                      handleAddTarefa={handleAddTarefa}
-                    />
-                  ))}
-                </VStack>
-              </VStack>
-            ))}
-          </HStack>
-        </VStack>
-      </HStack>
-    </Box>
-  );
-}
+                        {listaParaComponente.map((lista) => (
+                            <CardLista
+                                key={lista.idLista}
+                                listas={[lista]}
+                                tarefas={tarefas}
+                                handleAddTarefa={handleAddTarefa}
+                                handleDeleteLista={handleDeleteLista}
+                                handleDeleteTarefa={handleDeleteTarefa}
+                            />
+                        ))}
+                        <Box p="3" w="30%" h="30%" bgColor="#c2c2c2" rounded={"md"} shadow={"md"} display="flex" alignItems="center" justifyContent="center" flexDirection="column">
+                            <AddIcon
+                                color="#444444"
+                                cursor="pointer"
+                                boxSize={8}
+                                onClick={() => addNewList(listaParaComponente[0].idTopico)} 
+                            />
+                            <Text fontWeight={"bold"} fontSize="md" color={"#0B1C5A"} cursor="pointer" onClick={() => addNewList(listaParaComponente[0].idTopico)} >
+                                Nova Lista
+                            </Text>
 
+                        </Box>
+                    </HStack>
+                </VStack>
+            </HStack>
+        </Box>
+    )
+}

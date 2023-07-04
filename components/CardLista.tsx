@@ -1,11 +1,13 @@
-import { Box, Text, HStack, Checkbox } from "@chakra-ui/react"
-import { AddIcon } from "@chakra-ui/icons";
+import { Box, Text, HStack, Checkbox, IconButton, Input } from "@chakra-ui/react"
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { useState } from "react"
 
 interface CardListaProps {
     listas: ILista[]
     tarefas: ITarefa[];
     handleAddTarefa: (idLista: string) => void;
+    handleDeleteLista: (id: string) => void; // Adicionei a propriedade handleDeleteLista ao tipo CardListaProps
+    handleDeleteTarefa: (id: string) => void
 }
 const { v4: uuidv4 } = require('uuid');
 
@@ -110,7 +112,17 @@ export default function CardLista(props: CardListaProps) {
         setTarefas(newTarefas);
         setValorInput("");
         console.log(newTarefas);
-    }
+    };
+
+    const handleDeleteLista = () => {
+        props.handleDeleteLista(props.listas[0].idLista);
+    };
+
+    const handleDeleteTarefa = (id: string) => {
+        const filteredTarefas = tarefas.filter((item) => item.idTask !== id);
+        setTarefas(filteredTarefas);
+    };
+
     return (
         <Box p="3" w="30%" h="30%" bgColor={props.listas[0].color} rounded={"md"} shadow={"md"}>
             <Text
@@ -139,9 +151,17 @@ export default function CardLista(props: CardListaProps) {
                                 onChange={() => handleConcluido(item.idTask)}
                                 colorScheme="green"
                             />
+                            <IconButton
+                                icon={<DeleteIcon />}
+                                variant="ghost"
+                                colorScheme="red"
+                                onClick={() => handleDeleteTarefa(item.idTask)}
+                                aria-label="Deletar Tarefa"
+                            />
                         </HStack>
                     )
                 }
+                return null;
             })}
             <HStack px="2" w="full" justifyContent="space-between">
 
@@ -151,15 +171,27 @@ export default function CardLista(props: CardListaProps) {
                         value={valorInput}
                         onChange={handleChangeInput}
                         placeholder="Digite algo"
-                        style={{ color: 'black !important' }}
-                    />
-
+                        style={{
+                            color: 'black',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            width: '200px',
+                            /* Outros estilos desejados */
+                          }}
+                        />
                     <AddIcon
                         color="#444444"
                         cursor="pointer"
                         onClick={handleSubmit}
                     />
                 </form>
+                <IconButton
+                    icon={<DeleteIcon />}
+                    variant="ghost"
+                    colorScheme="red"
+                    onClick={handleDeleteLista}
+                    aria-label="Deletar Tarefa"
+                />
             </HStack>
         </Box>
     )
